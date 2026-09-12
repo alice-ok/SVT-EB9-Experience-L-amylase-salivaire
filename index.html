@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>L'action de la salive sur l'amidon</title>
+<style>
+  :root{
+    --bg:#DCEEF2; --dark:#122C34; --panel:#1C7293; --yellow:#FFD97D;
+    --teal:#21295C; --blue:#0F8B8D; --wrong:#F3D3CB; --correct:#CFE9D6;
+    --feedbackBg:#F6F7E9; --green:#3F8F5C; --red:#B5432E; --white:#FFFFFF;
+    --bannerText:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:Calibri, 'Segoe UI', Arial, sans-serif; background:var(--bg);
+    color:var(--dark); min-height:100vh;
+  }
+  header{
+    padding:1.2rem 1.5rem 0.6rem; text-align:center;
+  }
+  header .tag{
+    display:inline-block; background:var(--white); border:2px solid var(--dark);
+    border-radius:10px; padding:0.25rem 0.9rem; font-weight:bold; font-size:0.85rem; margin-bottom:0.6rem;
+  }
+  header h1{ margin:0.2rem 0; font-size:1.7rem; }
+  header p{ margin:0; font-style:italic; color:#5b4636; }
+
+  nav.tabs{
+    display:flex; flex-wrap:wrap; gap:0.5rem; justify-content:center;
+    padding:0.8rem 1rem; position:sticky; top:0; background:var(--bg); z-index:10;
+    border-bottom:2px solid var(--dark);
+  }
+  nav.tabs button{
+    background:var(--yellow); border:2px solid var(--dark); border-radius:10px;
+    padding:0.5rem 0.9rem; font-weight:bold; font-family:inherit; font-size:0.85rem;
+    cursor:pointer; color:var(--dark);
+  }
+  nav.tabs button.active{ background:var(--teal); color:var(--bannerText); }
+  nav.tabs button:focus-visible{ outline:3px solid var(--blue); }
+
+  main{ max-width:900px; margin:0 auto; padding:1rem 1.2rem 3rem; }
+  section.panel{
+    display:none; background:var(--panel); border:2px solid var(--dark); border-radius:14px;
+    padding:1.4rem; color:var(--white);
+  }
+  section.panel.active{ display:block; }
+  section.panel h2{ margin-top:0; }
+  .instructions{ font-size:0.95rem; opacity:0.95; margin-bottom:1rem; }
+
+  .btn{
+    display:inline-block; background:var(--blue); color:var(--white); border:2px solid var(--dark);
+    border-radius:10px; padding:0.55rem 1.1rem; font-weight:bold; font-family:inherit;
+    cursor:pointer; font-size:0.95rem; text-decoration:none;
+  }
+  .btn:focus-visible{ outline:3px solid var(--yellow); }
+  .btn.secondary{ background:var(--yellow); color:var(--dark); }
+
+  /* Protocol */
+  .step-list{ list-style:none; padding:0; margin:0; }
+  .step-list li{
+    background:rgba(255,255,255,0.12); border:2px solid var(--dark); border-radius:10px;
+    padding:0.7rem 1rem; margin-bottom:0.7rem; display:flex; gap:0.7rem; align-items:flex-start;
+  }
+  .step-list .badge{
+    flex:0 0 auto; width:2rem; height:2rem; border-radius:50%; background:var(--dark);
+    color:var(--white); display:flex; align-items:center; justify-content:center; font-weight:bold;
+  }
+
+  /* Results tables */
+  .results-tables{ display:flex; flex-wrap:wrap; gap:1.5rem; margin-bottom:1rem; }
+  .results-table-block{ flex:1 1 320px; }
+  .results-table-block h3{ font-size:0.95rem; margin:0 0 0.4rem; font-style:italic; }
+  table.data-table{ border-collapse:collapse; width:100%; background:var(--white); color:var(--dark); }
+  table.data-table th, table.data-table td{
+    border:1px solid var(--dark); padding:0.4rem 0.6rem; text-align:center; font-size:0.9rem;
+  }
+  table.data-table th{ background:var(--dark); color:var(--white); }
+  .results-note{ margin-top:0.8rem; }
+
+  /* Simulation */
+  .sim-controls{ display:flex; align-items:center; gap:1rem; flex-wrap:wrap; margin-bottom:1.4rem; }
+  .sim-controls .btn{ min-width:9rem; }
+  .sim-time{ font-weight:bold; font-size:1rem; }
+  .sim-tubes{ display:flex; gap:2.5rem; flex-wrap:wrap; align-items:flex-end; }
+  .sim-tube-block{ text-align:center; }
+  .sim-tube-block h3{ margin:0 0 0.6rem; font-size:0.95rem; }
+  .sim-tube{
+    width:70px; height:200px; border:3px solid var(--dark); border-bottom-left-radius:16px;
+    border-bottom-right-radius:16px; position:relative; background:rgba(255,255,255,0.25);
+    display:flex; align-items:flex-end; overflow:hidden; margin:0 auto;
+  }
+  .sim-tube-fill{ width:100%; background:#B5432E; transition:height 0.8s ease; }
+  .sim-tube-value{ margin-top:0.5rem; font-weight:bold; }
+  .sim-mini-tube{
+    width:46px; height:90px; border:2px solid var(--dark); border-bottom-left-radius:12px;
+    border-bottom-right-radius:12px; margin:0 auto 0.4rem; transition:background 0.6s ease;
+  }
+  .sim-color-grid{ display:grid; grid-template-columns:repeat(2, auto); gap:1.6rem 2.5rem; }
+  .sim-color-item{ text-align:center; font-size:0.85rem; font-weight:bold; }
+  .sim-gauge-wrap{ max-width:520px; }
+  .sim-gauge-track{
+    width:100%; height:2.2rem; border:2px solid var(--dark); border-radius:12px; overflow:hidden;
+    background:var(--white); margin:0.8rem 0;
+  }
+  .sim-gauge-fill{ height:100%; transition:width 0.3s ease, background 0.3s ease; }
+  .sim-slider{ width:100%; }
+  .sim-readout{ font-weight:bold; font-size:1.05rem; margin-bottom:0.4rem; }
+  .sim-verdict{
+    background:var(--feedbackBg); color:var(--dark); border:2px solid var(--dark); border-radius:10px;
+    padding:0.7rem 1rem; margin-top:0.8rem; font-weight:bold;
+  }
+
+  /* Wheel */
+  .wheel-wrap{ display:flex; flex-direction:column; align-items:center; gap:1rem; }
+  .wheel-holder{ position:relative; width:min(320px, 80vw); height:min(320px, 80vw); }
+  .wheel-holder svg{ width:100%; height:100%; transition: transform 4s cubic-bezier(.17,.67,.32,1.3); pointer-events:none; }
+  .pointer{
+    position:absolute; top:-6px; left:50%; transform:translateX(-50%);
+    width:0; height:0; border-left:14px solid transparent; border-right:14px solid transparent;
+    border-top:24px solid var(--dark); z-index:2;
+  }
+  .tf-card{
+    background:var(--white); color:var(--dark); border:2px solid var(--dark); border-radius:10px;
+    padding:1rem; max-width:520px; text-align:center; font-weight:bold; font-size:1.05rem;
+  }
+  .tf-buttons{ display:flex; gap:1rem; }
+  .tf-buttons button{
+    background:var(--yellow); border:2px solid var(--dark); border-radius:10px;
+    padding:0.6rem 1.4rem; font-weight:bold; font-family:inherit; cursor:pointer; font-size:1rem;
+  }
+  .feedback-box{
+    background:var(--feedbackBg); color:var(--dark); border:2px solid var(--dark); border-radius:10px;
+    padding:0.8rem 1rem; max-width:520px; display:none;
+  }
+  .feedback-box.show{ display:block; }
+  .feedback-box .label{ font-weight:bold; }
+  .feedback-box .label.correct{ color:var(--green); }
+  .feedback-box .label.incorrect{ color:var(--red); }
+
+  /* Drag and drop */
+  .dd-items{ display:flex; flex-wrap:wrap; gap:0.6rem; margin-bottom:1.2rem; min-height:3rem; }
+  .dd-item{
+    background:var(--yellow); border:2px solid var(--dark); border-radius:10px; color:var(--dark);
+    padding:0.5rem 0.9rem; font-weight:bold; cursor:pointer; font-size:0.9rem; user-select:none;
+  }
+  .dd-item.selected{ background:var(--blue); color:var(--white); }
+  .dd-item.placed{ opacity:0.35; cursor:default; }
+  .dd-buckets{ display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:0.8rem; }
+  .dd-bucket{
+    background:rgba(255,255,255,0.12); border:2px dashed var(--white); border-radius:10px;
+    padding:0.7rem; min-height:100px;
+  }
+  .dd-bucket h3{ margin:0 0 0.5rem; font-size:0.95rem; }
+  .dd-bucket .dd-item{ display:block; margin-bottom:0.4rem; }
+  .dd-bucket .dd-item.wrong-drop{ background:var(--wrong); }
+  .dd-bucket .dd-item.right-drop{ background:var(--correct); }
+
+  /* Memory */
+  .memory-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(120px,1fr)); gap:0.6rem; }
+  .mem-card{
+    background:var(--teal); border:2px solid var(--dark); border-radius:10px; min-height:90px;
+    display:flex; align-items:center; justify-content:center; text-align:center; padding:0.5rem;
+    font-weight:bold; font-size:0.85rem; cursor:pointer; color:var(--dark);
+  }
+  .mem-card.flipped{ background:var(--white); }
+  .mem-card.matched{ background:var(--correct); cursor:default; }
+
+  /* Word search */
+  .ws-wrap{ display:flex; gap:1.5rem; flex-wrap:wrap; align-items:flex-start; }
+  .ws-grid{ display:grid; gap:2px; user-select:none; }
+  .ws-cell{
+    width:2rem; height:2rem; background:var(--white); color:var(--dark); border-radius:4px;
+    display:flex; align-items:center; justify-content:center; font-weight:bold; cursor:pointer;
+    font-size:0.9rem;
+  }
+  .ws-cell.selecting{ background:var(--yellow); }
+  .ws-cell.found{ background:var(--correct); }
+  .ws-words{ list-style:none; padding:0; }
+  .ws-words li{ font-weight:bold; margin-bottom:0.4rem; }
+  .ws-words li.found{ text-decoration:line-through; opacity:0.6; }
+
+  /* Quiz */
+  .quiz-q{ font-weight:bold; font-style:italic; margin-bottom:0.9rem; }
+  .quiz-options{ display:flex; flex-direction:column; gap:0.6rem; margin-bottom:1rem; }
+  .quiz-opt{
+    display:flex; align-items:center; gap:0.7rem; background:var(--yellow); border:2px solid var(--dark);
+    border-radius:10px; padding:0.6rem 1rem; cursor:pointer; font-weight:bold; color:var(--dark);
+  }
+  .quiz-opt .letter{
+    flex:0 0 auto; width:1.8rem; height:1.8rem; border-radius:50%; background:var(--panel);
+    color:var(--white); display:flex; align-items:center; justify-content:center;
+  }
+  .quiz-opt.correct{ background:var(--correct); }
+  .quiz-opt.incorrect{ background:var(--wrong); }
+  .quiz-opt[aria-disabled="true"]{ cursor:default; }
+  .quiz-progress{ font-size:0.85rem; margin-bottom:0.6rem; opacity:0.9; }
+  .score-banner{
+    background:var(--white); color:var(--dark); border:2px solid var(--dark); border-radius:10px;
+    padding:1rem; text-align:center; font-weight:bold; display:none;
+  }
+  .score-banner.show{ display:block; }
+
+  footer{ text-align:center; padding:1rem; font-size:0.8rem; color:#5b4636; }
+
+  @media (max-width:600px){
+    header h1{ font-size:1.3rem; }
+    .dd-buckets{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="tag">SVT</span>
+  <h1 id="mainTitle"></h1>
+  <p id="mainSubtitle"></p>
+</header>
+
+<nav class="tabs" id="tabsNav" aria-label="Navigation des activités"></nav>
+
+<main id="mainContent"></main>
+
+<footer>Collège d'IRFANE — SVT — Activité interactive</footer>
+
+<script>
+const DATA = {"title": "L'action de la salive sur l'amidon", "subtitle": "EB9 • Digestion chimique de l'amidon par l'amylase salivaire", "palette": {"bg": "DCEEF2", "dark": "122C34", "panel": "1C7293", "yellow": "FFD97D", "teal": "21295C", "blue": "0F8B8D", "bannerText": "FFFFFF"}, "resultsTable": {"caption": "Documents 2 et 3 — Tests réalisés au début (t=0) et à la fin (t=10min)", "tables": [{"title": "Document 2 — Test à l'eau iodée (+ : présence d'amidon)", "rows": [["Tube", "A", "B"], ["t = 0", "+", "+"], ["t = 10 min", "+", "−"]]}, {"title": "Document 3 — Test de Fehling (+ : présence de sucre réducteur)", "rows": [["Tube", "A", "B"], ["t = 0", "−", "−"], ["t = 10 min", "−", "+"]]}], "note": "Dans le tube B, l'amidon disparaît (eau iodée négative) et du sucre réducteur apparaît (Fehling positif) : l'amylase salivaire a transformé chimiquement l'amidon."}, "simulation": {"type": "tubes-color", "title": "l'action de l'amylase salivaire", "labelA": "Tube A (témoin)", "labelB": "Tube B (+ salive)", "timePoints": ["t = 0", "t = 10 min"], "iodineA": ["positive", "positive"], "iodineB": ["positive", "negative"], "fehlingA": ["negative", "negative"], "fehlingB": ["negative", "positive"], "verdict": "Dans le tube B, l'amidon disparaît et du sucre réducteur apparaît : l'amylase salivaire a transformé chimiquement l'amidon."}, "protocolSteps": ["Préparer un tube contenant de l'empois d'amidon bouilli + de l'eau. C'est le tube A : tube témoin.", "Préparer un autre tube contenant de l'empois d'amidon + de la salive fraîche (amylase salivaire). C'est le tube B.", "Placer les deux tubes au bain-marie à 37°C pendant 10 minutes, puis tester chaque tube à l'eau iodée et à la liqueur de Fehling."], "trueFalse": [{"text": "Le tube A contient de la salive fraîche.", "answer": false, "explanation": "C'est le tube B qui contient de la salive fraîche ; le tube A est le témoin."}, {"text": "L'amylase salivaire transforme l'amidon en sucre réducteur.", "answer": true, "explanation": "C'est le rôle de cette enzyme contenue dans la salive."}, {"text": "Le test à l'eau iodée révèle la présence de sucre réducteur.", "answer": false, "explanation": "Le test à l'eau iodée révèle l'amidon ; c'est le test de Fehling qui révèle le sucre réducteur."}, {"text": "Le tube B donne un test de Fehling positif à la fin de l'expérience.", "answer": true, "explanation": "Du sucre réducteur est apparu dans le tube B grâce à l'amylase salivaire."}, {"text": "L'expérience se déroule à température ambiante.", "answer": false, "explanation": "Les tubes sont placés au bain-marie à 37°C, la température du corps."}], "dragDrop": {"buckets": ["Tube A (témoin)", "Tube B", "Commun aux deux tubes"], "items": [{"text": "Sans salive", "bucket": 0}, {"text": "Avec salive fraîche", "bucket": 1}, {"text": "Empois d'amidon", "bucket": 2}, {"text": "37°C", "bucket": 2}, {"text": "10 minutes", "bucket": 2}]}, "memory": [{"a": "Amylase salivaire", "b": "Enzyme de la salive qui digère l'amidon"}, {"a": "Empois d'amidon", "b": "Solution d'amidon cuit utilisée dans l'expérience"}, {"a": "Eau iodée", "b": "Test qui révèle la présence d'amidon"}, {"a": "Liqueur de Fehling", "b": "Test qui révèle un sucre réducteur"}, {"a": "Tube témoin", "b": "Tube sans salive, servant de référence"}, {"a": "Sucre réducteur", "b": "Produit de la digestion chimique de l'amidon"}], "wordsearch": {"size": 12, "words": ["AMIDON", "SALIVE", "AMYLASE", "FEHLING", "IODEE", "ENZYME", "SUCRE", "TUBE"]}, "quiz": [{"text": "Quel est le facteur variable entre les tubes A et B ?", "options": ["La présence de salive fraîche (amylase salivaire)", "La température", "La durée de l'expérience", "La quantité d'amidon"], "correct": 0, "explanation": "Les deux tubes contiennent la même solution d'amidon, à la même température et pour la même durée : seule la présence de salive fraîche diffère."}, {"text": "Quels sont les facteurs communs aux deux tubes ?", "options": ["La présence de salive", "Le test à l'eau iodée uniquement", "La solution d'amidon, la température (37°C) et la durée (10 min)", "La quantité de sucre"], "correct": 2, "explanation": "Seule la présence de salive fraîche diffère : la solution d'amidon, la température et la durée sont identiques."}, {"text": "Qu'observe-t-on à la fin de l'expérience ?", "options": ["Les deux tubes donnent les mêmes résultats", "Tube B : eau iodée négative + Fehling positif (tube A inchangé)", "Le tube A devient positif au Fehling", "Aucun changement dans les deux tubes"], "correct": 1, "explanation": "Dans le tube B, l'amidon a disparu (test iodé négatif) et du sucre réducteur est apparu (Fehling positif) ; le tube A reste inchangé."}, {"text": "Quelle conclusion peut-on tirer de cette expérience ?", "options": ["L'amidon se transforme sans intervention d'enzyme", "L'eau iodée digère l'amidon", "La digestion de l'amidon ne commence que dans l'estomac", "L'amylase salivaire transforme l'amidon en sucre réducteur"], "correct": 3, "explanation": "Seul le tube contenant de la salive fraîche a transformé l'amidon : c'est l'amylase salivaire qui réalise cette transformation chimique."}]};
+
+const sections = [
+  { id: "protocole", label: "\u{1F52C} Protocole" },
+  { id: "resultats", label: "\u{1F4CA} R\u00e9sultats" },
+  { id: "simulation", label: "\u{1F9EA} Simulation" },
+  { id: "roue", label: "\u{1F3A1} Roue Vrai/Faux" },
+  { id: "glisser", label: "\u{1F91A} Glisser-d\u00e9poser" },
+  { id: "memory", label: "\u{1F9E9} Memory" },
+  { id: "motsmeles", label: "\u{1F524} Mots m\u00each\u00e9s" },
+  { id: "quiz", label: "\u2753 Quiz final" },
+];
+
+document.getElementById("mainTitle").textContent = DATA.title;
+document.getElementById("mainSubtitle").textContent = DATA.subtitle;
+
+const tabsNav = document.getElementById("tabsNav");
+const mainContent = document.getElementById("mainContent");
+
+sections.forEach((sec, i) => {
+  const btn = document.createElement("button");
+  btn.textContent = sec.label;
+  btn.setAttribute("data-target", sec.id);
+  btn.className = i === 0 ? "active" : "";
+  btn.addEventListener("click", () => showSection(sec.id));
+  tabsNav.appendChild(btn);
+
+  const panel = document.createElement("section");
+  panel.className = "panel" + (i === 0 ? " active" : "");
+  panel.id = "panel-" + sec.id;
+  mainContent.appendChild(panel);
+});
+
+function showSection(id) {
+  document.querySelectorAll("section.panel").forEach(p => p.classList.toggle("active", p.id === "panel-" + id));
+  document.querySelectorAll("nav.tabs button").forEach(b => b.classList.toggle("active", b.getAttribute("data-target") === id));
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+/* ---------------- Protocole ---------------- */
+(function initProtocole(){
+  const panel = document.getElementById("panel-protocole");
+  panel.innerHTML = `<h2>Protocole exp\u00e9rimental</h2>
+    <p class="instructions">Clique sur chaque \u00e9tape pour la r\u00e9v\u00e9ler.</p>
+    <ul class="step-list" id="stepList"></ul>`;
+  const list = document.getElementById("stepList");
+  DATA.protocolSteps.forEach((step, i) => {
+    const li = document.createElement("li");
+    li.style.opacity = i === 0 ? "1" : "0.35";
+    li.innerHTML = `<span class="badge">${i+1}</span><span class="step-text">${i === 0 ? step : "Clique sur \u00ab R\u00e9v\u00e9ler \u00bb pour voir cette \u00e9tape\u2026"}</span>`;
+    if (i > 0) {
+      const revealBtn = document.createElement("button");
+      revealBtn.className = "btn secondary";
+      revealBtn.style.marginLeft = "auto";
+      revealBtn.textContent = "R\u00e9v\u00e9ler";
+      revealBtn.addEventListener("click", () => {
+        li.querySelector(".step-text").textContent = step;
+        li.style.opacity = "1";
+        revealBtn.remove();
+      });
+      li.appendChild(revealBtn);
+    }
+    list.appendChild(li);
+  });
+})();
+
+/* ---------------- R\u00e9sultats ---------------- */
+(function initResultats(){
+  const panel = document.getElementById("panel-resultats");
+  const rt = DATA.resultsTable;
+  if (!rt) {
+    panel.innerHTML = `<h2>R\u00e9sultats</h2><p>Voir l'onglet Protocole pour les donn\u00e9es de cette exp\u00e9rience.</p>`;
+    return;
+  }
+  let tablesHtml = "";
+  rt.tables.forEach(tbl => {
+    const headerRow = tbl.rows[0];
+    const bodyRows = tbl.rows.slice(1);
+    tablesHtml += `<div class="results-table-block">
+      ${tbl.title ? `<h3>${tbl.title}</h3>` : ""}
+      <table class="data-table">
+        <thead><tr>${headerRow.map(h => `<th>${h}</th>`).join("")}</tr></thead>
+        <tbody>${bodyRows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join("")}</tr>`).join("")}</tbody>
+      </table>
+    </div>`;
+  });
+  panel.innerHTML = `<h2>R\u00e9sultats exp\u00e9rimentaux</h2>
+    <p class="instructions">${rt.caption}</p>
+    <div class="results-tables">${tablesHtml}</div>
+    <p class="results-note">${rt.note || ""}</p>`;
+})();
+
+/* ---------------- Simulation ---------------- */
+(function initSimulation(){
+  const panel = document.getElementById("panel-simulation");
+  const sim = DATA.simulation;
+  if (!sim) {
+    panel.innerHTML = `<h2>Simulation</h2><p>Simulation non disponible pour cette exp\u00e9rience.</p>`;
+    return;
+  }
+
+  if (sim.type === "tubes-fill") {
+    let step = 0;
+    panel.innerHTML = `<h2>Simulation\u00a0: ${sim.title || "l'exp\u00e9rience"}</h2>
+      <p class="instructions">Clique sur \u00ab \u00c9tape suivante \u00bb pour avancer dans le temps et observer les tubes.</p>
+      <div class="sim-controls">
+        <button class="btn" id="simNextBtn">\u25B6 \u00c9tape suivante</button>
+        <button class="btn secondary" id="simResetBtn">\u21BB Recommencer</button>
+        <span class="sim-time" id="simTime"></span>
+      </div>
+      <div class="sim-tubes">
+        <div class="sim-tube-block">
+          <h3>${sim.labelA}</h3>
+          <div class="sim-tube"><div class="sim-tube-fill" id="simFillA"></div></div>
+          <div class="sim-tube-value" id="simValA"></div>
+        </div>
+        <div class="sim-tube-block">
+          <h3>${sim.labelB}</h3>
+          <div class="sim-tube"><div class="sim-tube-fill" id="simFillB"></div></div>
+          <div class="sim-tube-value" id="simValB"></div>
+        </div>
+      </div>
+      <div class="sim-verdict" id="simVerdict" style="display:none;"></div>`;
+
+    const fillA = document.getElementById("simFillA");
+    const fillB = document.getElementById("simFillB");
+    const valA = document.getElementById("simValA");
+    const valB = document.getElementById("simValB");
+    const timeEl = document.getElementById("simTime");
+    const verdict = document.getElementById("simVerdict");
+    const nextBtn = document.getElementById("simNextBtn");
+
+    function render() {
+      const t = sim.timePoints[step];
+      const vA = sim.valuesA[step], vB = sim.valuesB[step];
+      timeEl.textContent = `Temps\u00a0: ${t} ${sim.timeUnit}`;
+      fillA.style.height = (vA / sim.maxValue * 100) + "%";
+      fillB.style.height = (vB / sim.maxValue * 100) + "%";
+      valA.textContent = `${vA} ${sim.unit}`;
+      valB.textContent = `${vB} ${sim.unit}`;
+      if (step === sim.timePoints.length - 1) {
+        nextBtn.disabled = true;
+        nextBtn.textContent = "Fin de l'exp\u00e9rience";
+        verdict.style.display = "block";
+        verdict.textContent = sim.verdict || "";
+      }
+    }
+
+    nextBtn.addEventListener("click", () => {
+      if (step < sim.timePoints.length - 1) { step++; render(); }
+    });
+    document.getElementById("simResetBtn").addEventListener("click", () => {
+      step = 0; nextBtn.disabled = false; nextBtn.textContent = "\u25B6 \u00c9tape suivante";
+      verdict.style.display = "none"; render();
+    });
+    render();
+
+  } else if (sim.type === "tubes-color") {
+    let step = 0;
+    panel.innerHTML = `<h2>Simulation\u00a0: ${sim.title || "l'exp\u00e9rience"}</h2>
+      <p class="instructions">Clique sur \u00ab \u00c9tape suivante \u00bb pour avancer dans le temps et observer la couleur des tests.</p>
+      <div class="sim-controls">
+        <button class="btn" id="simNextBtn">\u25B6 \u00c9tape suivante</button>
+        <button class="btn secondary" id="simResetBtn">\u21BB Recommencer</button>
+        <span class="sim-time" id="simTime"></span>
+      </div>
+      <div class="sim-color-grid">
+        <div class="sim-color-item">${sim.labelA}<br>Test eau iod\u00e9e<div class="sim-mini-tube" id="simIodA"></div><span id="simIodATxt"></span></div>
+        <div class="sim-color-item">${sim.labelB}<br>Test eau iod\u00e9e<div class="sim-mini-tube" id="simIodB"></div><span id="simIodBTxt"></span></div>
+        <div class="sim-color-item">${sim.labelA}<br>Test de Fehling<div class="sim-mini-tube" id="simFehA"></div><span id="simFehATxt"></span></div>
+        <div class="sim-color-item">${sim.labelB}<br>Test de Fehling<div class="sim-mini-tube" id="simFehB"></div><span id="simFehBTxt"></span></div>
+      </div>
+      <div class="sim-verdict" id="simVerdict" style="display:none;"></div>`;
+
+    const COLORS = {
+      iod_pos: "#2b2a52", iod_neg: "#e8c96b",
+      feh_pos: "#b5432e", feh_neg: "#4f81bc",
+    };
+    const els = {
+      iodA: document.getElementById("simIodA"), iodATxt: document.getElementById("simIodATxt"),
+      iodB: document.getElementById("simIodB"), iodBTxt: document.getElementById("simIodBTxt"),
+      fehA: document.getElementById("simFehA"), fehATxt: document.getElementById("simFehATxt"),
+      fehB: document.getElementById("simFehB"), fehBTxt: document.getElementById("simFehBTxt"),
+    };
+    const timeEl = document.getElementById("simTime");
+    const verdict = document.getElementById("simVerdict");
+    const nextBtn = document.getElementById("simNextBtn");
+
+    function setTube(el, txtEl, positive, posLabel, negLabel, posColor, negColor) {
+      el.style.background = positive ? posColor : negColor;
+      txtEl.textContent = positive ? posLabel : negLabel;
+    }
+
+    function render() {
+      timeEl.textContent = sim.timePoints[step];
+      setTube(els.iodA, els.iodATxt, sim.iodineA[step] === "positive", "+ (amidon)", "\u2212", COLORS.iod_pos, COLORS.iod_neg);
+      setTube(els.iodB, els.iodBTxt, sim.iodineB[step] === "positive", "+ (amidon)", "\u2212", COLORS.iod_pos, COLORS.iod_neg);
+      setTube(els.fehA, els.fehATxt, sim.fehlingA[step] === "positive", "+ (sucre)", "\u2212", COLORS.feh_pos, COLORS.feh_neg);
+      setTube(els.fehB, els.fehBTxt, sim.fehlingB[step] === "positive", "+ (sucre)", "\u2212", COLORS.feh_pos, COLORS.feh_neg);
+      if (step === sim.timePoints.length - 1) {
+        nextBtn.disabled = true;
+        nextBtn.textContent = "Fin de l'exp\u00e9rience";
+        verdict.style.display = "block";
+        verdict.textContent = sim.verdict || "";
+      }
+    }
+
+    nextBtn.addEventListener("click", () => {
+      if (step < sim.timePoints.length - 1) { step++; render(); }
+    });
+    document.getElementById("simResetBtn").addEventListener("click", () => {
+      step = 0; nextBtn.disabled = false; nextBtn.textContent = "\u25B6 \u00c9tape suivante";
+      verdict.style.display = "none"; render();
+    });
+    render();
+
+  } else if (sim.type === "gauge") {
+    panel.innerHTML = `<h2>Simulation\u00a0: ${sim.title || "l'exp\u00e9rience"}</h2>
+      <p class="instructions">Fais glisser le curseur pour choisir une temp\u00e9rature et observe l'activit\u00e9 de l'enzyme.</p>
+      <div class="sim-gauge-wrap">
+        <input type="range" class="sim-slider" id="simSlider" min="${sim.min}" max="${sim.max}" value="${sim.points[0][0]}" step="1">
+        <div class="sim-readout" id="simReadout"></div>
+        <div class="sim-gauge-track"><div class="sim-gauge-fill" id="simGaugeFill"></div></div>
+        <div class="sim-verdict" id="simVerdict"></div>
+      </div>`;
+
+    const slider = document.getElementById("simSlider");
+    const readout = document.getElementById("simReadout");
+    const gaugeFill = document.getElementById("simGaugeFill");
+    const verdict = document.getElementById("simVerdict");
+    const pts = sim.points;
+
+    function interpolate(temp) {
+      for (let i = 0; i < pts.length - 1; i++) {
+        const [t0, a0] = pts[i], [t1, a1] = pts[i+1];
+        if (temp >= t0 && temp <= t1) {
+          const ratio = (temp - t0) / (t1 - t0);
+          return a0 + ratio * (a1 - a0);
+        }
+      }
+      return pts[pts.length-1][1];
+    }
+
+    function colorFor(activity) {
+      if (activity >= 80) return "#3F8F5C";
+      if (activity >= 30) return "#E8B84B";
+      return "#B5432E";
+    }
+
+    function verdictFor(temp, activity) {
+      if (activity >= 80) return `\u2705 \u00c0 ${temp}\u00b0C, l'enzyme est proche de son activit\u00e9 optimale.`;
+      if (temp < 37) return `\u2744\ufe0f \u00c0 ${temp}\u00b0C, l'enzyme est ralentie par le froid (mais pas d\u00e9truite).`;
+      return `\u{1F525} \u00c0 ${temp}\u00b0C, la chaleur excessive a fortement r\u00e9duit (ou d\u00e9truit) l'activit\u00e9 de l'enzyme.`;
+    }
+
+    function render() {
+      const temp = parseInt(slider.value, 10);
+      const activity = Math.round(interpolate(temp));
+      readout.textContent = `Temp\u00e9rature\u00a0: ${temp}\u00b0C \u2014 Activit\u00e9 enzymatique estim\u00e9e\u00a0: ${activity}%`;
+      gaugeFill.style.width = activity + "%";
+      gaugeFill.style.background = colorFor(activity);
+      verdict.textContent = verdictFor(temp, activity);
+    }
+
+    slider.addEventListener("input", render);
+    render();
+  }
+})();
+
+/* ---------------- Roue Vrai/Faux ---------------- */
+(function initRoue(){
+  const panel = document.getElementById("panel-roue");
+  panel.innerHTML = `<h2>Roue Vrai / Faux</h2>
+    <p class="instructions">Clique sur la roue pour la faire tourner, puis d\u00e9cide si l'affirmation est vraie ou fausse.</p>
+    <div class="wheel-wrap">
+      <div class="wheel-holder">
+        <div class="pointer"></div>
+        <svg id="wheelSvg" viewBox="0 0 200 200"></svg>
+      </div>
+      <button class="btn" id="spinBtn">\u{1F3A1} Faire tourner</button>
+      <div class="tf-card" id="tfCard" style="display:none;"></div>
+      <div class="tf-buttons" id="tfButtons" style="display:none;">
+        <button data-answer="true">\u2713 Vrai</button>
+        <button data-answer="false">\u2717 Faux</button>
+      </div>
+      <div class="feedback-box" id="tfFeedback"></div>
+    </div>`;
+
+  const items = DATA.trueFalse;
+  const n = items.length;
+  const svg = document.getElementById("wheelSvg");
+  const colors = ["#FFCF6D","#61A6AB","#C44D2B","#CFE9D6","#F3D3CB","#4F81BC"];
+  const cx = 100, cy = 100, r = 95;
+  for (let i = 0; i < n; i++) {
+    const a0 = (i / n) * 2 * Math.PI - Math.PI/2;
+    const a1 = ((i+1) / n) * 2 * Math.PI - Math.PI/2;
+    const x0 = cx + r*Math.cos(a0), y0 = cy + r*Math.sin(a0);
+    const x1 = cx + r*Math.cos(a1), y1 = cy + r*Math.sin(a1);
+    const large = (a1-a0) > Math.PI ? 1 : 0;
+    const path = document.createElementNS("http://www.w3.org/2000/svg","path");
+    path.setAttribute("d", `M${cx},${cy} L${x0},${y0} A${r},${r} 0 ${large} 1 ${x1},${y1} Z`);
+    path.setAttribute("fill", colors[i % colors.length]);
+    path.setAttribute("stroke", "#2B2118");
+    path.setAttribute("stroke-width", "1.5");
+    svg.appendChild(path);
+    const amid = (a0 + a1) / 2;
+    const tx = cx + (r*0.62)*Math.cos(amid), ty = cy + (r*0.62)*Math.sin(amid);
+    const text = document.createElementNS("http://www.w3.org/2000/svg","text");
+    text.setAttribute("x", tx); text.setAttribute("y", ty);
+    text.setAttribute("text-anchor","middle"); text.setAttribute("dominant-baseline","middle");
+    text.setAttribute("font-size","16"); text.setAttribute("font-weight","bold"); text.setAttribute("fill","#2B2118");
+    text.textContent = (i+1);
+    svg.appendChild(text);
+  }
+
+  let current = -1, spinning = false, rotation = 0;
+  let remaining = Array.from({length:n}, (_, i) => i);
+  const spinBtn = document.getElementById("spinBtn");
+  const tfCard = document.getElementById("tfCard");
+  const tfButtons = document.getElementById("tfButtons");
+  const tfFeedback = document.getElementById("tfFeedback");
+  const spinHint = document.createElement("p");
+  spinHint.style.fontSize = "0.8rem";
+  spinHint.style.fontStyle = "italic";
+  document.querySelector(".wheel-wrap").insertBefore(spinHint, tfCard);
+
+  function updateHint() {
+    spinHint.textContent = remaining.length === n
+      ? "Toutes les affirmations vont y passer, une seule fois chacune !"
+      : `Affirmations restantes \u00e0 tirer\u00a0: ${remaining.length} / ${n}`;
+  }
+  updateHint();
+
+  spinBtn.addEventListener("click", () => {
+    if (spinning) return;
+    spinning = true;
+    tfFeedback.classList.remove("show");
+    tfButtons.style.display = "none";
+    tfCard.style.display = "none";
+    if (remaining.length === 0) { remaining = Array.from({length:n}, (_, i) => i); }
+    const idx = Math.floor(Math.random() * remaining.length);
+    const pick = remaining.splice(idx, 1)[0];
+    updateHint();
+    const segAngle = 360 / n;
+    const targetCenter = pick * segAngle + segAngle/2;
+    const spins = 4 + Math.floor(Math.random()*2);
+    rotation += spins*360 + (360 - targetCenter) - (rotation % 360);
+    svg.style.transform = `rotate(${rotation}deg)`;
+    setTimeout(() => {
+      spinning = false;
+      current = pick;
+      tfCard.textContent = items[pick].text;
+      tfCard.style.display = "block";
+      tfButtons.style.display = "flex";
+    }, 4000);
+  });
+
+  tfButtons.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-answer]");
+    if (!btn || current < 0) return;
+    const chosen = btn.getAttribute("data-answer") === "true";
+    const correct = items[current].answer;
+    const ok = chosen === correct;
+    tfFeedback.innerHTML = `<span class="label ${ok ? "correct":"incorrect"}">${ok ? "Bonne r\u00e9ponse !" : "Pas tout \u00e0 fait."}</span> ${items[current].explanation || ""}`;
+    tfFeedback.classList.add("show");
+    tfButtons.style.display = "none";
+  });
+})();
+
+/* ---------------- Glisser-d\u00e9poser ---------------- */
+(function initDragDrop(){
+  const panel = document.getElementById("panel-glisser");
+  const dd = DATA.dragDrop;
+  panel.innerHTML = `<h2>Glisser-d\u00e9poser</h2>
+    <p class="instructions">Clique sur une \u00e9tiquette puis clique sur la bonne cat\u00e9gorie pour la placer. (Fonctionne aussi en glisser-d\u00e9poser sur ordinateur.)</p>
+    <div class="dd-items" id="ddItems"></div>
+    <div class="dd-buckets" id="ddBuckets"></div>
+    <p id="ddResult" style="margin-top:1rem; font-weight:bold;"></p>
+    <button class="btn secondary" id="ddReset">\u21BB Recommencer</button>`;
+
+  const itemsWrap = document.getElementById("ddItems");
+  const bucketsWrap = document.getElementById("ddBuckets");
+  const resultEl = document.getElementById("ddResult");
+  let selected = null;
+  let placedCount = 0;
+
+  function render() {
+    itemsWrap.innerHTML = "";
+    dd.items.forEach((it, idx) => {
+      if (it._placed) return;
+      const el = document.createElement("div");
+      el.className = "dd-item";
+      el.textContent = it.text;
+      el.draggable = true;
+      el.addEventListener("click", () => {
+        document.querySelectorAll(".dd-items .dd-item").forEach(x => x.classList.remove("selected"));
+        selected = idx;
+        el.classList.add("selected");
+      });
+      el.addEventListener("dragstart", (e) => { e.dataTransfer.setData("text/plain", idx); });
+      itemsWrap.appendChild(el);
+    });
+
+    bucketsWrap.innerHTML = "";
+    dd.buckets.forEach((label, bIdx) => {
+      const b = document.createElement("div");
+      b.className = "dd-bucket";
+      b.innerHTML = `<h3>${label}</h3>`;
+      b.addEventListener("dragover", (e) => e.preventDefault());
+      b.addEventListener("drop", (e) => {
+        e.preventDefault();
+        const idx = parseInt(e.dataTransfer.getData("text/plain"), 10);
+        place(idx, bIdx);
+      });
+      b.addEventListener("click", () => {
+        if (selected !== null) place(selected, bIdx);
+      });
+      dd.items.forEach((it, idx) => {
+        if (it._placed && it._bucket === bIdx) {
+          const el = document.createElement("div");
+          el.className = "dd-item placed " + (it.bucket === bIdx ? "right-drop" : "wrong-drop");
+          el.textContent = it.text + (it.bucket === bIdx ? " \u2713" : " \u2717");
+          b.appendChild(el);
+        }
+      });
+      bucketsWrap.appendChild(b);
+    });
+  }
+
+  function place(idx, bIdx) {
+    if (dd.items[idx]._placed) return;
+    dd.items[idx]._placed = true;
+    dd.items[idx]._bucket = bIdx;
+    selected = null;
+    placedCount++;
+    render();
+    if (placedCount === dd.items.length) {
+      const correct = dd.items.filter(it => it._bucket === it.bucket).length;
+      resultEl.textContent = `R\u00e9sultat : ${correct} / ${dd.items.length} bien plac\u00e9(e)s.`;
+    }
+  }
+
+  document.getElementById("ddReset").addEventListener("click", () => {
+    dd.items.forEach(it => { it._placed = false; it._bucket = undefined; });
+    placedCount = 0; selected = null; resultEl.textContent = "";
+    render();
+  });
+
+  render();
+})();
+
+/* ---------------- Memory ---------------- */
+(function initMemory(){
+  const panel = document.getElementById("panel-memory");
+  panel.innerHTML = `<h2>Memory</h2>
+    <p class="instructions">Retrouve les paires terme / d\u00e9finition.</p>
+    <div class="memory-grid" id="memGrid"></div>
+    <p id="memResult" style="margin-top:1rem; font-weight:bold;"></p>
+    <button class="btn secondary" id="memReset">\u21BB Recommencer</button>`;
+
+  const pairs = DATA.memory;
+  let cards = [];
+  pairs.forEach((p, i) => {
+    cards.push({ pairId: i, text: p.a, matched: false });
+    cards.push({ pairId: i, text: p.b, matched: false });
+  });
+
+  const grid = document.getElementById("memGrid");
+  const resultEl = document.getElementById("memResult");
+  let flipped = [];
+  let lock = false;
+  let matchedCount = 0;
+
+  function shuffle(arr) {
+    for (let i = arr.length -1; i>0; i--) {
+      const j = Math.floor(Math.random()*(i+1));
+      [arr[i],arr[j]] = [arr[j],arr[i]];
+    }
+    return arr;
+  }
+
+  function render() {
+    grid.innerHTML = "";
+    cards.forEach((c, idx) => {
+      const el = document.createElement("div");
+      el.className = "mem-card" + (c.matched ? " matched" : "") + (flipped.includes(idx) ? " flipped" : "");
+      el.textContent = (c.matched || flipped.includes(idx)) ? c.text : "?";
+      el.addEventListener("click", () => onCardClick(idx));
+      grid.appendChild(el);
+    });
+  }
+
+  function onCardClick(idx) {
+    if (lock || cards[idx].matched || flipped.includes(idx)) return;
+    flipped.push(idx);
+    render();
+    if (flipped.length === 2) {
+      lock = true;
+      const [i1, i2] = flipped;
+      if (cards[i1].pairId === cards[i2].pairId) {
+        cards[i1].matched = true; cards[i2].matched = true;
+        matchedCount++;
+        flipped = [];
+        lock = false;
+        render();
+        if (matchedCount === pairs.length) {
+          resultEl.textContent = "Bravo, toutes les paires sont trouv\u00e9es !";
+        }
+      } else {
+        setTimeout(() => { flipped = []; lock = false; render(); }, 900);
+      }
+    }
+  }
+
+  document.getElementById("memReset").addEventListener("click", () => {
+    cards.forEach(c => c.matched = false);
+    shuffle(cards);
+    flipped = []; lock = false; matchedCount = 0; resultEl.textContent = "";
+    render();
+  });
+
+  shuffle(cards);
+  render();
+})();
+
+/* ---------------- Mots m\u00each\u00e9s ---------------- */
+(function initWordSearch(){
+  const panel = document.getElementById("panel-motsmeles");
+  const words = DATA.wordsearch.words.map(w => w.toUpperCase());
+  const size = DATA.wordsearch.size || 12;
+  panel.innerHTML = `<h2>Mots m\u00each\u00e9s</h2>
+    <p class="instructions">Clique sur la premi\u00e8re lettre d'un mot puis sur sa derni\u00e8re lettre (horizontal ou vertical).</p>
+    <div class="ws-wrap">
+      <div class="ws-grid" id="wsGrid" style="grid-template-columns:repeat(${size}, 2rem);"></div>
+      <ul class="ws-words" id="wsWords"></ul>
+    </div>`;
+
+  const gridData = Array.from({length:size}, () => Array(size).fill(null));
+  const placements = [];
+
+  function tryPlace(word) {
+    const dirs = [[1,0],[0,1]];
+    for (let attempt=0; attempt<200; attempt++) {
+      const dir = dirs[Math.floor(Math.random()*dirs.length)];
+      const maxRow = dir[1] ? size - word.length : size - 1;
+      const maxCol = dir[0] ? size - word.length : size - 1;
+      const row = Math.floor(Math.random()*(maxRow+1));
+      const col = Math.floor(Math.random()*(maxCol+1));
+      let ok = true;
+      for (let k=0;k<word.length;k++) {
+        const r = row + dir[1]*k, c = col + dir[0]*k;
+        if (gridData[r][c] !== null && gridData[r][c] !== word[k]) { ok = false; break; }
+      }
+      if (ok) {
+        const cells = [];
+        for (let k=0;k<word.length;k++) {
+          const r = row + dir[1]*k, c = col + dir[0]*k;
+          gridData[r][c] = word[k];
+          cells.push([r,c]);
+        }
+        placements.push({ word, cells });
+        return true;
+      }
+    }
+    return false;
+  }
+
+  words.forEach(w => tryPlace(w));
+  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  for (let r=0;r<size;r++) for (let c=0;c<size;c++) if (!gridData[r][c]) gridData[r][c] = letters[Math.floor(Math.random()*letters.length)];
+
+  const gridEl = document.getElementById("wsGrid");
+  const cellEls = [];
+  for (let r=0;r<size;r++) {
+    cellEls.push([]);
+    for (let c=0;c<size;c++) {
+      const d = document.createElement("div");
+      d.className = "ws-cell";
+      d.textContent = gridData[r][c];
+      d.dataset.r = r; d.dataset.c = c;
+      gridEl.appendChild(d);
+      cellEls[r].push(d);
+    }
+  }
+
+  const wordsList = document.getElementById("wsWords");
+  const foundSet = new Set();
+  words.forEach(w => {
+    const li = document.createElement("li");
+    li.textContent = w;
+    li.id = "wsw-" + w;
+    wordsList.appendChild(li);
+  });
+
+  let start = null;
+  function cellKey(r,c){ return r+","+c; }
+
+  function clearSelecting() {
+    document.querySelectorAll(".ws-cell.selecting").forEach(el => el.classList.remove("selecting"));
+  }
+
+  function checkSelection(r1,c1,r2,c2) {
+    for (const p of placements) {
+      const [pr1,pc1] = p.cells[0];
+      const [pr2,pc2] = p.cells[p.cells.length-1];
+      const matchFwd = (pr1===r1 && pc1===c1 && pr2===r2 && pc2===c2);
+      const matchBwd = (pr1===r2 && pc1===c2 && pr2===r1 && pc2===c1);
+      if ((matchFwd || matchBwd) && !foundSet.has(p.word)) {
+        foundSet.add(p.word);
+        p.cells.forEach(([r,c]) => cellEls[r][c].classList.add("found"));
+        document.getElementById("wsw-" + p.word).classList.add("found");
+        return true;
+      }
+    }
+    return false;
+  }
+
+  gridEl.addEventListener("click", (e) => {
+    const cell = e.target.closest(".ws-cell");
+    if (!cell) return;
+    const r = parseInt(cell.dataset.r,10), c = parseInt(cell.dataset.c,10);
+    if (!start) {
+      start = {r,c};
+      cell.classList.add("selecting");
+    } else {
+      const sameRow = start.r === r, sameCol = start.c === c;
+      if (sameRow || sameCol) {
+        clearSelecting();
+        checkSelection(start.r, start.c, r, c);
+      }
+      start = null;
+      clearSelecting();
+    }
+  });
+})();
+
+/* ---------------- Quiz final ---------------- */
+(function initQuiz(){
+  const panel = document.getElementById("panel-quiz");
+  panel.innerHTML = `<h2>Quiz final</h2>
+    <div class="quiz-progress" id="quizProgress"></div>
+    <div id="quizBody"></div>
+    <div class="score-banner" id="quizScore"></div>`;
+
+  const questions = DATA.quiz;
+  let qi = 0, score = 0;
+  const body = document.getElementById("quizBody");
+  const progress = document.getElementById("quizProgress");
+  const scoreBanner = document.getElementById("quizScore");
+  const letters = ["A","B","C","D"];
+
+  function renderQuestion() {
+    scoreBanner.classList.remove("show");
+    const q = questions[qi];
+    progress.textContent = `Question ${qi+1} / ${questions.length}`;
+    body.innerHTML = `<div class="quiz-q">${q.text}</div>
+      <div class="quiz-options" id="quizOptions"></div>
+      <div class="feedback-box" id="quizFeedback"></div>
+      <button class="btn" id="quizNext" style="display:none;">Suivant \u2192</button>`;
+    const optsWrap = document.getElementById("quizOptions");
+    q.options.forEach((opt, i) => {
+      const el = document.createElement("div");
+      el.className = "quiz-opt";
+      el.innerHTML = `<span class="letter">${letters[i]}</span><span>${opt}</span>`;
+      el.addEventListener("click", () => answer(i));
+      optsWrap.appendChild(el);
+    });
+  }
+
+  function answer(i) {
+    const q = questions[qi];
+    const opts = document.querySelectorAll("#quizOptions .quiz-opt");
+    opts.forEach(o => o.setAttribute("aria-disabled","true"));
+    opts.forEach((o,idx) => {
+      o.style.pointerEvents = "none";
+      if (idx === q.correct) o.classList.add("correct");
+      if (idx === i && i !== q.correct) o.classList.add("incorrect");
+    });
+    const ok = i === q.correct;
+    if (ok) score++;
+    const fb = document.getElementById("quizFeedback");
+    fb.className = "feedback-box show";
+    fb.innerHTML = `<span class="label ${ok ? "correct":"incorrect"}">${ok ? "Bonne r\u00e9ponse !" : "Pas tout \u00e0 fait."}</span> ${q.explanation}`;
+    document.getElementById("quizNext").style.display = "inline-block";
+    document.getElementById("quizNext").addEventListener("click", next, { once:true });
+  }
+
+  function next() {
+    qi++;
+    if (qi < questions.length) {
+      renderQuestion();
+    } else {
+      body.innerHTML = "";
+      progress.textContent = "";
+      scoreBanner.classList.add("show");
+      scoreBanner.textContent = `\u{1F31F} Score final : ${score} / ${questions.length}`;
+    }
+  }
+
+  renderQuestion();
+})();
+</script>
+</body>
+</html>
